@@ -1,22 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fleetly
 
-Stack: Next.js (App Router) + Supabase + Vercel.
+Multi-tenant fleet management & ERP for car rental agencies. Next.js (App Router) + Supabase + Vercel.
+Product brief and coding conventions: [CLAUDE.md](CLAUDE.md).
+
+## Project layout
+
+- `src/domain/` – pure business logic (roles, permissions, slug rules)
+- `src/server/` – data access and use cases (server-only)
+- `src/app/` – routes and Server Actions: `(auth)` login/signup, `onboarding`, `(app)` protected shell
+- `src/proxy.ts` – session refresh + auth redirects
+- `supabase/migrations/` – schema, RLS policies, RPCs
+- `supabase/tests/` – RLS tests on in-memory Postgres (`npm run test:db`, no Docker needed)
 
 ## Supabase setup
 
 1. Copy `.env.example` to `.env.local` and fill in your project URL and publishable key (Supabase Dashboard → Project Settings → API).
-2. Supabase clients live in `src/lib/supabase/`:
-   - `client.ts` – for Client Components
-   - `server.ts` – for Server Components, Server Actions and Route Handlers
-   - `proxy.ts` – session refresh, wired up in `src/proxy.ts`
-3. Local development / migrations use the Supabase CLI (`npx supabase ...`), configured in `supabase/`:
-   - `npx supabase link --project-ref <ref>` – link to a remote project
-   - `npx supabase start` – run a local stack (requires Docker)
-   - `npx supabase migration new <name>` / `npx supabase db push`
+2. Apply the migrations to your project:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref <ref>
+   npx supabase db push
+   ```
+3. In Supabase Dashboard → Authentication → URL Configuration, set **Site URL** to your production URL and add
+   `http://localhost:3000/**` and `https://<your-vercel-domain>/**` to **Redirect URLs** (email confirmation lands on `/auth/confirm`).
+4. After any schema change, update `src/lib/supabase/database.types.ts` (or run `npx supabase gen types typescript --linked`).
 
 ## Vercel
 
-Import the repo in Vercel (or run `npx vercel`) and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` as environment variables.
+Import the repo in Vercel (or run `npx vercel`) and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` as environment variables, then redeploy.
 
 ## Getting Started
 
